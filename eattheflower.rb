@@ -147,13 +147,14 @@ class FlowersKiller
     @width = width
     @height = height
     @score = 0
+    @end_cond = 69
 
     @map = Map.new
     @map.load_map File.join(File.dirname(__FILE__), "meadow.txt")
 
     @flowers = Map.new
     @flowers.load_map File.join(File.dirname(__FILE__), "flowers.txt")
-
+    
     puts @map.types.keys
     puts @flowers.types.keys
 
@@ -176,6 +177,9 @@ class FlowersKiller
   def tick
     check_collision
     increase_tick_count
+    if @end_cond == @score
+     finish
+    end
   end
 
   def check_collision
@@ -239,10 +243,6 @@ class FlowersKiller
   def textbox_content
     "%d flower parts has been eaten" % @score
   end
-
-  #def textbox_content
-  #  "You better eat this flower. Score: %dm" % @count
-  #end
 
   def exit
     Kernel.exit
