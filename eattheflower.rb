@@ -29,9 +29,13 @@ class FlowersKiller
     end
   end
 
-  class Wall < Item
+  class Grass < Item
     def char
       '#'
+    end
+
+    def color
+      Curses::COLOR_GREEN
     end
 
     def blocking?
@@ -39,6 +43,19 @@ class FlowersKiller
     end
   end
 
+  class Flower < Item
+    def char
+      '!'
+    end
+
+    def color
+      Curses::COLOR_GREEN
+    end
+
+    def blocking?
+      false
+    end
+  end
   class Finish < Item
     def char
       'F'
@@ -55,7 +72,7 @@ class FlowersKiller
 
   class Start < Item
     def char
-      ''
+      'S'
     end
   end
 
@@ -63,7 +80,8 @@ class FlowersKiller
     attr_accessor :types
 
     OBJECT_MAPPING = {
-      '#' => Wall,
+      '#' => Grass,
+      '!' => Flower,
       "S" => Start,
       "F" => Finish
     }
@@ -113,11 +131,18 @@ class FlowersKiller
     @width = width
     @height = height
     @score = 0
+
     @map = Map.new
     @map.load_map File.join(File.dirname(__FILE__), "meadow.txt")
+
+#    @flowers = Map.new
+#    @flowers.load_map File.join(File.dirname(__FILE__), "flowers.txt")
+
     puts @map.types.keys
     start = @map.types['Start'].first
+
     @player = Greenfly.new(start.x,start.y)
+
     reset_speed
   end
 
@@ -129,6 +154,7 @@ class FlowersKiller
     @speed = 0
   end
 
+  #excecutes after every move
   def tick
     increase_tick_count
   end
@@ -172,16 +198,16 @@ class FlowersKiller
   end
 
   def objects
-    [@player] + @map.objects
+    [@player] + @map.objects #+ @flowers.objects
   end
 
   def finish
-    @status = "Win!"
+    @status = "All flowers has been eaten!"
     exit
   end
 
   def textbox_content
-    ""
+    "You better eat this flower"
   end
 
   def exit
