@@ -4,7 +4,7 @@ require "bundler/setup"
 require "gaminator"
 
 class FlowersKiller
-  class Greenfly < Struct.new(:x, :y)
+  class  Greenfly < Struct.new(:x, :y)
     def char
       "*"
     end
@@ -44,6 +44,7 @@ class FlowersKiller
   end
 
   class Flower < Item
+  #class Flower < Struct.new(:x, :y, :end)
     def char
       '!'
     end
@@ -95,6 +96,13 @@ class FlowersKiller
       self[x][y] = value
     end
 
+    def remove(x, y)
+      to_remove = self[x][y]
+      @objects.delete(to_remove)
+      @types[object_name(to_remove.class)].delete(to_remove)
+      self[x].delete(y)
+    end
+
     def load_map(file)
       @objects = []
       @types = {}
@@ -115,7 +123,7 @@ class FlowersKiller
         instance = klass.new(x, y)
         self.set(x, y, instance)
         @objects.push instance
-        name = klass.name.split('::').last
+        name = object_name(klass)
         @types[name] ||= []
         @types[name].push(instance)
       end
@@ -123,6 +131,12 @@ class FlowersKiller
 
     def objects
       @objects
+    end
+    
+    private
+
+    def object_name(klass)
+      klass.name.split('::').last
     end
   end
 
@@ -135,14 +149,16 @@ class FlowersKiller
     @map = Map.new
     @map.load_map File.join(File.dirname(__FILE__), "meadow.txt")
 
-#    @flowers = Map.new
-#    @flowers.load_map File.join(File.dirname(__FILE__), "flowers.txt")
+    @flowers = Map.new
+    @flowers.load_map File.join(File.dirname(__FILE__), "flowers.txt")
 
     puts @map.types.keys
+    puts @flowers.types.keys
+
     start = @map.types['Start'].first
 
     @player = Greenfly.new(start.x,start.y)
-
+    #@flower
     reset_speed
   end
 
@@ -156,7 +172,15 @@ class FlowersKiller
 
   #excecutes after every move
   def tick
+    check_collision
     increase_tick_count
+  end
+
+  def check_collision
+    if k = @flowers.get(@player.x,@player.y)
+      @flowers.remove(@player.x, @player.y)
+      increase_score
+    end
   end
 
   def increase_tick_count
@@ -165,11 +189,15 @@ class FlowersKiller
 
   def input_map
     {
-      ?a => :move_left,
-      ?w => :move_top,
-      ?s => :move_down,
-      ?d => :move_right
+      ?j => :move_left,
+      ?i => :move_top,
+      ?k => :move_down,
+      ?l => :move_right
     }
+  end
+
+  def increase_score
+   @score += 1 
   end
 
   def move_right
@@ -198,7 +226,7 @@ class FlowersKiller
   end
 
   def objects
-    [@player] + @map.objects #+ @flowers.objects
+    [@player] + @map.objects + @flowers.objects
   end
 
   def finish
@@ -207,8 +235,12 @@ class FlowersKiller
   end
 
   def textbox_content
-    "You better eat this flower"
+    "%d flower parts has been eaten" % @score
   end
+
+  #def textbox_content
+  #  "You better eat this flower. Score: %dm" % @count
+  #end
 
   def exit
     Kernel.exit
